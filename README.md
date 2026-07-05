@@ -1,2 +1,2 @@
 # BeyondU-Skill-DNA-Mapper
-BeyondU Skill DNA Mapper is a career development platform that helps students assess skills, discover hidden strengths, match with dream companies, review projects, complete challenges, and track their learning journey through an interactive experience.
+BeyondU Skill DNA Mapper is a comprehensive career development platform that helps students discover, assess, and enhance their technical skills through intelligent skill mapping, personalized career recommendations, dream company matching, project evaluation, skill verification, interactive challenges, and continuous progress tracking—all within a unified learning ecosystem.

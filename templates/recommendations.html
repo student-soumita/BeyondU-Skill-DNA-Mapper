@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Strategic Growth Roadmap{% endblock %}
+{% block page_title %}💎 Strategic Growth Roadmap Matrix{% endblock %}
+
+{% block content %}
+<div class="roadmap-container" style="max-width: 850px; margin: 0 auto;">
+    <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; margin-bottom: 30px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Targeted Progression Analysis</h3>
+        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5;">This engine evaluates current capability variances up to level 100 against target benchmarks to structure actionable task trajectories.</p>
+    </div>
+
+    <div id="roadmapTargetStack" class="roadmap-stack">
+        <!-- Dynamically Populated via Native Fetch API -->
+    </div>
+</div>
+
+<style>
+    .roadmap-stack { display: flex; flex-direction: column; gap: 20px; }
+    .roadmap-card { background-color: var(--bg-secondary); border-left: 4px solid var(--accent-color); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-radius: 0 8px 8px 0; padding: 24px; transition: transform 0.2s; }
+    .roadmap-card:hover { transform: translateX(4px); }
+    .roadmap-card-title { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .roadmap-card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function pullRoadmapTelemetry() {
+        try {
+            const response = await fetch('/api/recommendations');
+            const suggestions = await response.json();
+            
+            const container = document.getElementById('roadmapTargetStack');
+            container.innerHTML = '';
+
+            suggestions.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'roadmap-card';
+                
+                // Set border/text accent color based on urgency keywords
+                if (item.title.includes('🔥') || item.title.includes('CRITICAL')) {
+                    card.style.borderLeftColor = '#ef4444';
+                    card.innerHTML = `<h4 class="roadmap-card-title" style="color:#f87171;">${item.title}</h4>`;
+                } else if (item.title.includes('⚡')) {
+                    card.style.borderLeftColor = '#f59e0b';
+                    card.innerHTML = `<h4 class="roadmap-card-title" style="color:#fbbf24;">${item.title}</h4>`;
+                } else {
+                    card.style.borderLeftColor = '#10b981';
+                    card.innerHTML = `<h4 class="roadmap-card-title" style="color:#34d399;">${item.title}</h4>`;
+                }
+
+                card.innerHTML += `<p class="roadmap-card-desc">${item.description}</p>`;
+                container.appendChild(card);
+            });
+        } catch (err) {
+            console.error("Roadmap generation stream anomaly:", err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', pullRoadmapTelemetry);
+
+</script>
+{% endblock %}

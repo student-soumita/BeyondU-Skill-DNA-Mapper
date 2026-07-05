@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Hidden Talent Discovery{% endblock %}
+{% block page_title %}Competency & Career Potential Analytics{% endblock %}
+
+{% block content %}
+<div class="talent-interface-container">
+    <div style="margin-bottom: 30px;">
+        <h2 style="color: var(--text-main); margin-bottom: 8px;">Hidden Talent Discovery</h2>
+        <p style="color: var(--text-muted);">Beyond every visible skill lies untapped potential. Discover hidden strengths and career possibilities waiting to be unlocked.</p>
+    </div>
+
+    <div id="talentContainer" class="talent-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        <div class="loading-state" style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
+            Analyzing competency telemetry...
+        </div>
+    </div>
+</div>
+
+<style>
+    .talent-card { 
+        background-color: var(--bg-secondary); 
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        padding: 24px; 
+        transition: transform 0.2s;
+    }
+    .talent-card:hover { transform: translateY(-4px); border-color: var(--accent-color); }
+    .card-title { font-weight: 600; color: var(--text-main); margin-bottom: 12px; font-size: 18px; }
+    .card-desc { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadHiddenTalents() {
+    const container = document.getElementById("talentContainer");
+    try {
+        const response = await fetch("/api/hidden-talents");
+        const talents = await response.json();
+        container.innerHTML = "";
+
+        if (talents.length === 0) {
+            container.innerHTML = '<div class="card" style="padding:20px; color:var(--text-muted);">Keep logging skills to level 70+ to unlock insights!</div>';
+            return;
+        }
+
+        talents.forEach(talent => {
+            container.innerHTML += `
+            <div class="talent-card">
+                <div class="card-title">✨ ${talent.title}</div>
+                <div class="card-desc">${talent.description}</div>
+            </div>
+            `;
+        });
+    } catch (error) {
+        container.innerHTML = `<div class="talent-card" style="border-color: #ef4444;"><div class="card-title" style="color: #ef4444;">❌ Error</div><div class="card-desc">Unable to establish connection to the Talent Inference Engine.</div></div>`;
+    }
+}
+loadHiddenTalents();
+</script>
+{% endblock %}

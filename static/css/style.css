@@ -1,0 +1,262 @@
+/* Custom System Reset Rules and Root Design Variables */
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    --border-color: #334155;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --header-height: 70px;
+    --transition-speed: 0.25s;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Master Layout Framework */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar Component Styling Layout */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-brand {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.brand-logo {
+    font-size: 24px;
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    transition: opacity var(--transition-speed);
+}
+
+.sidebar.collapsed .brand-name {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-menu {
+    flex: 1;
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all var(--transition-speed);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.menu-item:hover, .menu-item.active {
+    background-color: var(--bg-tertiary);
+    color: var(--text-main);
+}
+
+.menu-item.active {
+    border-left: 4px solid var(--accent-color);
+    background-color: rgba(99, 102, 241, 0.15);
+}
+
+.menu-icon {
+    font-size: 20px;
+    min-width: 32px;
+    display: inline-block;
+}
+
+.menu-text {
+    font-size: 15px;
+    font-weight: 500;
+    transition: opacity var(--transition-speed);
+}
+
+.sidebar.collapsed .menu-text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    color: #ef4444;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background var(--transition-speed);
+    white-space: nowrap;
+}
+
+.logout-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.sidebar.collapsed .logout-btn .menu-text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Workspace Frame Layout Components */
+.main-workspace {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0; /* Clear overflow configurations on flexible layouts */
+}
+
+.top-header {
+    height: var(--header-height);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background-color: var(--accent-color);
+    color: var(--text-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.user-display-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.content-body {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.app-footer {
+    height: 50px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    background-color: var(--bg-secondary);
+}
+
+/* Responsive Media Breakdown Interceptions */
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute;
+        height: 100vh;
+    }
+    .sidebar.collapsed {
+        width: 0px;
+        border-right: none;
+    }
+    .top-header {
+        padding: 0 16px;
+    }
+    .content-body {
+        padding: 16px;
+    }
+}

@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Daily Challenge Arena{% endblock %}
+{% block page_title %}Gamified Competency Arena{% endblock %}
+
+{% block content %}
+<div class="arena-wrapper" style="max-width: 800px; margin: 0 auto;">
+    
+    <div class="stats-dashboard-card" style="display: flex; gap: 20px; margin-bottom: 30px; background: var(--bg-secondary); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+        <div class="stat-capsule" style="flex: 1; text-align: center; border-right: 1px solid var(--border-color);">
+            <div style="font-size: 14px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Current Streak</div>
+            <div style="font-size: 32px; font-weight: 800; color: #f59e0b; margin-top: 5px;">🔥 <span id="displayStreak">{{ user.streak }}</span> Days</div>
+        </div>
+        <div class="stat-capsule" style="flex: 1; text-align: center;">
+            <div style="font-size: 14px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Score Accumulated</div>
+            <div style="font-size: 32px; font-weight: 800; color: var(--accent-color); margin-top: 5px;">⭐ <span id="displayXP">{{ user.xp }}</span> XP</div>
+        </div>
+    </div>
+
+    <div class="quest-deck-card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 35px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+        {% if completed_today %}
+            <div id="clearedState" style="text-align: center; padding: 40px 0;">
+                <div style="font-size: 64px; margin-bottom: 20px;">🏆</div>
+                <h2 style="color: var(--text-main); font-weight: 700; margin-bottom: 12px;">Daily Node Domain Cleared!</h2>
+                <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6;">Excellent execution. Your daily competency matrix has been successfully updated. Return tomorrow to unlock your next diagnostic evaluation.</p>
+            </div>
+        {% elif not challenge %}
+            <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+                <p>No systematic challenges are currently registered in the engine matrix database registry.</p>
+            </div>
+        {% else %}
+            <div id="interactiveQuestContainer">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <span style="background: rgba(99,102,241,0.15); color: var(--accent-color); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid rgba(99,102,241,0.3);">
+                        ⚡ {{ challenge.category }}
+                    </span>
+                    <span style="color: #10b981; font-weight: 700; font-size: 14px;">
+                        +{{ challenge.xp_reward }} XP Reward
+                    </span>
+                </div>
+
+                <h3 style="font-size: 22px; line-height: 1.5; color: var(--text-main); margin-bottom: 30px; font-weight: 600;">
+                    {{ challenge.question }}
+                </h3>
+
+                <div class="response-matrix-stack" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
+                    <button onclick="commitOptionSelection('A')" class="option-row-btn" style="width: 100%; text-align: left; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s ease;">
+                        <strong style="color: var(--accent-color); margin-right: 12px;">A.</strong> {{ challenge.option_a }}
+                    </button>
+                    <button onclick="commitOptionSelection('B')" class="option-row-btn" style="width: 100%; text-align: left; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s ease;">
+                        <strong style="color: var(--accent-color); margin-right: 12px;">B.</strong> {{ challenge.option_b }}
+                    </button>
+                    <button onclick="commitOptionSelection('C')" class="option-row-btn" style="width: 100%; text-align: left; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s ease;">
+                        <strong style="color: var(--accent-color); margin-right: 12px;">C.</strong> {{ challenge.option_c }}
+                    </button>
+                    <button onclick="commitOptionSelection('D')" class="option-row-btn" style="width: 100%; text-align: left; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); padding: 18px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s ease;">
+                        <strong style="color: var(--accent-color); margin-right: 12px;">D.</strong> {{ challenge.option_d }}
+                    </button>
+                </div>
+
+                <div id="evaluationAlertBanner" style="display: none; padding: 20px; border-radius: 10px; margin-top: 20px; line-height: 1.6;">
+                    <div id="statusBadge" style="font-weight: 700; font-size: 18px; margin-bottom: 8px;"></div>
+                    <div id="explanationBody" style="font-size: 14px; color: var(--text-main);"></div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .option-row-btn:hover {
+        border-color: var(--accent-color) !important;
+        background: rgba(99, 102, 241, 0.05) !important;
+        transform: scale(1.01);
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let executionLocked = false;
+
+async function commitOptionSelection(selectedLetter) {
+    if (executionLocked) return;
+    executionLocked = true;
+
+    // Freeze interactive buttons execution loop
+    document.querySelectorAll('.option-row-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+    });
+
+    try {
+        const queryPayload = await fetch('/api/daily-challenge/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                challenge_id: "{{ challenge.id if challenge else 0 }}",
+                selected_option: selectedLetter
+            })
+        });
+
+        const engineResult = await queryPayload.json();
+        
+        const feedbackBanner = document.getElementById('evaluationAlertBanner');
+        const statusBadge = document.getElementById('statusBadge');
+        const explanationBody = document.getElementById('explanationBody');
+
+        feedbackBanner.style.display = 'block';
+        explanationBody.textContent = engineResult.explanation;
+
+        if (engineResult.correct) {
+            statusBadge.textContent = "🎯 Target Hit! Correct Answer";
+            feedbackBanner.style.background = "rgba(16, 185, 129, 0.15)";
+            feedbackBanner.style.border = "1px solid #10b981";
+            statusBadge.style.color = "#10b981";
+            
+            // Dynamic telemetry data mutation
+            document.getElementById('displayXP').textContent = engineResult.new_xp;
+            document.getElementById('displayStreak').textContent = engineResult.new_streak;
+        } else {
+            statusBadge.textContent = "❌ Mission Failed! Incorrect Selection";
+            feedbackBanner.style.background = "rgba(239, 68, 68, 0.15)";
+            feedbackBanner.style.border = "1px solid #ef4444";
+            statusBadge.style.color = "#ef4444";
+            document.getElementById('displayStreak').textContent = engineResult.new_streak;
+        }
+
+    } catch (faultVector) {
+        console.error("Critical core telemetry processing failure:", faultVector);
+        executionLocked = false;
+    }
+}
+</script>
+{% endblock %}

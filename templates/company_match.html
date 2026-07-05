@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Dream Company Match{% endblock %}
+{% block page_title %}Dream Company Match{% endblock %}
+
+{% block content %}
+<style>
+    .match-container {
+        max-width: 1100px;
+        margin: auto;
+    }
+    
+    .match-header-text {
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        font-size: 16px;
+    }
+
+    .match-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+    }
+
+    .company-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.15);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .company-card:hover {
+        transform: translateY(-5px);
+        border-color: #7c3aed;
+    }
+
+    .company-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .company-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 5px 0;
+    }
+
+    .role-name {
+        font-size: 15px;
+        color: #a78bfa; /* Light purple */
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .verdict-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Dynamic Badge Colors */
+    .verdict-excellent { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .verdict-strong { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .verdict-good { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .verdict-possible { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .verdict-need-skills { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .score-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .score-block {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .score-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .score-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    /* Progress Bar */
+    .compatibility-bar-bg {
+        width: 100%;
+        height: 8px;
+        background: var(--bg-primary);
+        border-radius: 4px;
+        margin-top: 20px;
+        overflow: hidden;
+    }
+
+    .compatibility-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #7c3aed, #3b82f6);
+        transition: width 1s ease-out;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 50px;
+        color: var(--text-muted);
+        font-size: 18px;
+    }
+</style>
+
+<div class="match-container">
+    <p class="match-header-text">Based on your current Career DNA score, here is how you align with top industry roles.</p>
+    
+    <div id="matchGrid" class="match-grid">
+        <div class="loading-state" id="loadingState">
+            Analyzing your DNA against industry standards... 🧬
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchCompanyMatches();
+    });
+
+    async function fetchCompanyMatches() {
+        const grid = document.getElementById('matchGrid');
+        
+        try {
+            const response = await fetch('/api/company-match');
+            const data = await response.json();
+            
+            grid.innerHTML = ''; // Clear loading state
+            
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="loading-state">No company matches generated yet. Keep building your skills!</div>';
+                return;
+            }
+
+            data.forEach(match => {
+                const card = document.createElement('div');
+                card.className = 'company-card';
+                
+                // Determine Badge Class
+                let badgeClass = 'verdict-need-skills';
+                if (match.compatibility >= 95) badgeClass = 'verdict-excellent';
+                else if (match.compatibility >= 85) badgeClass = 'verdict-strong';
+                else if (match.compatibility >= 70) badgeClass = 'verdict-good';
+                else if (match.compatibility >= 50) badgeClass = 'verdict-possible';
+
+                card.innerHTML = `
+                    <div class="company-header">
+                        <div>
+                            <h3 class="company-name">${match.company}</h3>
+                            <p class="role-name">${match.role}</p>
+                        </div>
+                        <span class="verdict-badge ${badgeClass}">${match.verdict}</span>
+                    </div>
+                    
+                    <div class="compatibility-bar-bg">
+                        <div class="compatibility-bar-fill" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="score-row">
+                        <div class="score-block">
+                            <span class="score-label">Required DNA</span>
+                            <span class="score-value">${match.required_score}</span>
+                        </div>
+                        <div class="score-block" style="text-align: right;">
+                            <span class="score-label">Compatibility</span>
+                            <span class="score-value">${match.compatibility}%</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+                
+                // Animate progress bar slightly after load
+                setTimeout(() => {
+                    card.querySelector('.compatibility-bar-fill').style.width = `${match.compatibility}%`;
+                }, 100);
+            });
+            
+        } catch (error) {
+            console.error("Failed to load company matches:", error);
+            grid.innerHTML = '<div class="loading-state" style="color: #ef4444;">Failed to load data. Please refresh and try again.</div>';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Dashboard{% endblock %}
+{% block page_title %}Operational Performance Command Center{% endblock %}
+
+{% block content %}
+<div class="dashboard-interface-grid">
+    <div class="dashboard-left-column">
+        <div class="profile-summary-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 30px; margin-bottom: 24px;">
+            <h2 style="color: var(--accent-color); margin-bottom: 10px;">Welcome Back, {{ current_username }}</h2>
+      <div class="dna-card">
+    <h2>🧬 Career DNA Score</h2>
+
+    <div class="dna-score">
+        {{ dna_score }}/100
+    </div>
+
+    <p>
+        This score represents your overall professional readiness based on
+        your current skills.
+    </p>
+</div>
+
+</div>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">Track your progress, manage your operational competencies up to level 100, and evaluate continuous skill gap intelligence from your workspace.</p>
+        </div>
+
+        <div class="metrics-summary-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Total Skills Tracked</div>
+                <div id="dynamicSkillCount" style="font-size: 24px; font-weight: 700; color: #10b981;">0</div>
+            </div>
+            <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Development Status</div>
+                <div style="font-size: 21px; font-weight: 700; color: #6366f1;">Active Growth</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-right-column">
+        <div class="management-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px;">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Skill Matrix Inventory</h3>
+            <div id="dashboardEditorInventory" class="inventory-stack"></div>
+        </div>
+    </div>
+</div>
+
+<div id="editSkillModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 24px; border-radius: 8px; width: 400px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: var(--accent-color);">Edit Skill Metrics</h3>
+        <input type="hidden" id="modalSkillId">
+        
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Skill Name</label>
+            <input type="text" id="modalSkillName" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: inherit; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Category</label>
+            <input type="text" id="modalSkillCategory" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: inherit; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Current Level (0-100)</label>
+            <input type="number" id="modalSkillCurrent" min="0" max="100" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: inherit; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Target Level (0-100)</label>
+            <input type="number" id="modalSkillTarget" min="0" max="100" style="width: 100%; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: inherit; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="edit-link-btn" style="background: transparent; color: var(--text-muted); border-color: var(--border-color);" onclick="closeEditModal()">Cancel</button>
+            <button class="edit-link-btn" style="background: #6366f1; color: #fff; border: none;" onclick="submitModalUpdate()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteSkillModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 24px; border-radius: 8px; width: 400px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5); text-align: center;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; color: #ef4444;">Delete Skill</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Are you sure you want to permanently delete this skill from your dashboard?</p>
+        <input type="hidden" id="modalDeleteSkillId">
+        
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button class="edit-link-btn" style="background: transparent; color: var(--text-muted); border-color: var(--border-color); padding: 6px 16px;" onclick="closeDeleteModal()">Cancel</button>
+            <button class="edit-link-btn" style="background: #ef4444; color: #fff; border: none; padding: 6px 16px;" onclick="submitModalDelete()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .inventory-stack { display: flex; flex-direction: column; gap: 14px; }
+    .skill-row-card { background: var(--bg-primary); border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .action-button-group { display: flex; gap: 8px; position: relative; z-index: 10; pointer-events: auto; }
+    .edit-link-btn { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; pointer-events: auto; }
+    .trash-btn { background: none; border: none; cursor: pointer; font-size: 16px; pointer-events: auto; }
+    .dna-card{
+    background:var(--bg-secondary);
+    border:1px solid var(--border-color);
+    border-radius:16px;
+    padding:28px;
+    margin-bottom:30px;
+    box-shadow:0 12px 30px rgba(0,0,0,.25);
+}
+
+.dna-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.dna-header h2{
+    margin:0;
+}
+
+.dna-header span{
+    color:#8b5cf6;
+    font-weight:bold;
+}
+
+.dna-score{
+    text-align:center;
+    font-size:64px;
+    font-weight:bold;
+    color:#8b5cf6;
+    margin-bottom:30px;
+}
+
+.dna-score small{
+    font-size:28px;
+    color:var(--text-muted);
+}
+
+.dna-progress-group label{
+    display:block;
+    margin-top:18px;
+    margin-bottom:8px;
+}
+
+.dna-progress{
+    width:100%;
+    height:14px;
+    background:#1f2937;
+    border-radius:50px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#7c3aed,#9333ea);
+    transition:width .8s ease;
+}
+    </style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function loadDashboardInventory() {
+        const res = await fetch('/api/skills/user');
+        const skills = await res.json();
+
+        const container = document.getElementById('dashboardEditorInventory');
+        container.innerHTML = '';
+        document.getElementById('dynamicSkillCount').innerText = skills.length;
+
+        skills.forEach(skill => {
+            const row = document.createElement('div');
+            row.className = 'skill-row-card';
+
+            row.dataset.id = skill.id;
+            row.dataset.name = skill.name;
+            row.dataset.category = skill.category;
+            row.dataset.current = skill.current_level;
+            row.dataset.target = skill.target_level;
+
+            row.innerHTML = `
+                <div>
+                    <div style="font-weight:600;">⚙️ ${skill.name}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">Level: ${skill.current_level}</div>
+                </div>
+
+                <div class="action-button-group">
+                    <button class="edit-link-btn"
+                     onclick="event.stopPropagation(); window.location.href='/challenge/${skill.id}'">
+                      Verify Mastery
+                    </button>
+
+                    <button class="edit-link-btn"
+                        onclick="event.stopPropagation(); openEdit(${skill.id})">
+                        Edit
+                    </button>
+
+                    <button class="trash-btn"
+                        onclick="event.stopPropagation(); eraseDashboardVector(${skill.id})">
+                        🗑️
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function openEdit(id) {
+        const row = document.querySelector(`[data-id="${id}"]`);
+        
+        document.getElementById('modalSkillId').value = id;
+        document.getElementById('modalSkillName').value = row.dataset.name;
+        document.getElementById('modalSkillCategory').value = row.dataset.category;
+        document.getElementById('modalSkillCurrent').value = row.dataset.current;
+        document.getElementById('modalSkillTarget').value = row.dataset.target;
+        
+        document.getElementById('editSkillModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editSkillModal').style.display = 'none';
+    }
+
+    function submitModalUpdate() {
+        const id = document.getElementById('modalSkillId').value;
+        const newName = document.getElementById('modalSkillName').value.trim();
+        const newCategory = document.getElementById('modalSkillCategory').value;
+        const newCurrent = parseInt(document.getElementById('modalSkillCurrent').value);
+        const newTarget = parseInt(document.getElementById('modalSkillTarget').value);
+
+        if (!newName) {
+            alert("Skill name cannot be empty.");
+            return;
+        }
+
+        if (isNaN(newCurrent) || isNaN(newTarget) || newCurrent < 0 || newCurrent > 100 || newTarget < 0 || newTarget > 100) {
+            alert("Invalid numeric input. Please enter numbers between 0 and 100.");
+            return;
+        }
+
+        fetch('/api/skills/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                skill_id: id,
+                name: newName,
+                category: newCategory,
+                current_level: newCurrent,
+                target_level: newTarget
+            })
+        }).then(() => {
+            closeEditModal();
+            loadDashboardInventory();
+        });
+    }
+
+    function eraseDashboardVector(id) {
+        document.getElementById('modalDeleteSkillId').value = id;
+        document.getElementById('deleteSkillModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteSkillModal').style.display = 'none';
+    }
+
+    async function submitModalDelete() {
+        const id = document.getElementById('modalDeleteSkillId').value;
+        await fetch(`/api/skills/delete/${id}`, { method: 'DELETE' });
+        closeDeleteModal();
+        loadDashboardInventory();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboardInventory);
+    async function loadCareerDNA(){
+
+    const response = await fetch("/api/career-dna");
+
+    const dna = await response.json();
+
+    document.getElementById("dnaScore").textContent =
+        dna.score;
+
+    document.getElementById("dnaType").textContent =
+        dna.dna_type;
+
+    document.getElementById("techBar").style.width =
+        dna.technical + "%";
+
+    document.getElementById("softBar").style.width =
+        dna.soft + "%";
+
+    document.getElementById("creativeBar").style.width =
+        dna.creative + "%";
+}
+
+loadCareerDNA();
+</script>
+{% endblock %}

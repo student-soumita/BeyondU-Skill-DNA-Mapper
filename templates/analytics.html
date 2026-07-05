@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Analytics Canvas{% endblock %}
+{% block page_title %}Competency Telemetry Analytics{% endblock %}
+
+{% block content %}
+<div class="analytics-interface-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px;">
+    
+    <!-- LEFT SIDE GRAPH: Redesigned Skill Mastery Breakdown -->
+    <div class="chart-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Skill Mastery Breakdown (Current vs. Target)</h3>
+        
+        <!-- Legend Indicator -->
+        <div style="display: flex; gap: 20px; margin-bottom: 24px; font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 12px; height: 12px; background-color: #10b981; border-radius: 3px;"></div>
+                <span style="color: var(--text-muted);">Current Level</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 12px; height: 12px; background-color: rgba(99, 102, 241, 0.15); border-radius: 3px; border: 1px solid #6366f1;"></div>
+                <span style="color: var(--text-muted);">Target Level</span>
+            </div>
+        </div>
+
+        <div style="width: 100%; min-height: 320px; position: relative;">
+            <canvas id="leftMasteryHorizontalCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE GRAPH: Competency Count by Domain Category -->
+    <div class="chart-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px;">
+        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 24px;">Competency Count by Domain Category</h3>
+        <div style="width: 100%; min-height: 320px; position: relative;">
+            <canvas id="rightCategoryDistributionCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 950px) { 
+        .analytics-interface-grid { grid-template-columns: 1fr !important; } 
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function loadAndRenderAnalytics() {
+        try {
+            const response = await fetch('/api/skills/user');
+            const skills = await response.json();
+            
+            renderLeftHorizontalChart(skills);
+            renderRightCategoryChart(skills);
+        } catch (err) {
+            console.error("Failed loading analytics telemetry streams:", err);
+        }
+    }
+
+    // LEFT GRAPH: Sleek Overlapping Horizontal Tracking Bars
+    function renderLeftHorizontalChart(skills) {
+        const canvas = document.getElementById('leftMasteryHorizontalCanvas');
+        if (!canvas || !skills || skills.length === 0) return;
+        
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        
+        canvas.width = rect.width * dpr;
+        canvas.height = Math.max(320, skills.length * 65) * dpr;
+        ctx.scale(dpr, dpr);
+
+        const w = rect.width;
+        const h = Math.max(320, skills.length * 65);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const labelWidth = 110;
+        const chartWidth = w - labelWidth - 60;
+        const rowHeight = 55;
+        const barHeight = 18;
+
+        skills.forEach((skill, index) => {
+            const y = 20 + (index * rowHeight);
+
+            // 1. Text Labels (Skill Names)
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '500 13px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(skill.name, 10, y + (barHeight / 2));
+
+            // Grid calculation parameters (Scale out of 100)
+            const targetWidthPixels = (skill.target_level / 100) * chartWidth;
+            const currentWidthPixels = (skill.current_level / 100) * chartWidth;
+
+            // 2. Draw Target Level Track (Background Container)
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.15)';
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.roundRect(labelWidth, y, targetWidthPixels, barHeight, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // 3. Draw Current Level Progress (Overlapping Foreground fill)
+            if (currentWidthPixels > 0) {
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.roundRect(labelWidth, y, Math.min(currentWidthPixels, targetWidthPixels), barHeight, 4);
+                ctx.fill();
+            }
+
+            // 4. Value Labels (e.g., "70 / 100") placed on the right end
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '600 11px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${skill.current_level}/${skill.target_level}`, labelWidth + targetWidthPixels + 12, y + (barHeight / 2));
+        });
+    }
+
+    // RIGHT GRAPH: Domain distribution calculation
+    function renderRightCategoryChart(skills) {
+        const canvas = document.getElementById('rightCategoryDistributionCanvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        
+        canvas.width = rect.width * dpr;
+        canvas.height = 320 * dpr;
+        ctx.scale(dpr, dpr);
+
+        const w = rect.width;
+        const h = 320;
+
+        // Grouping data structures counts
+        const categories = { Technical: 0, Soft: 0, Creative: 0 };
+        if (skills && skills.length > 0) {
+            skills.forEach(s => { 
+                if(categories[s.category] !== undefined) categories[s.category]++; 
+            });
+        }
+
+        const dataEntries = Object.entries(categories);
+        const maxVal = Math.max(...dataEntries.map(e => e[1]), 2);
+
+        // Chart bounds setup
+        const paddingBottom = 40;
+        const paddingTop = 20;
+        const paddingLeft = 30;
+        const chartHeight = h - paddingTop - paddingBottom;
+        const chartWidth = w - paddingLeft - 20;
+        const colWidth = chartWidth / dataEntries.length;
+        const barWidth = Math.min(60, colWidth * 0.5);
+
+        // Render clean y-axis guide lines
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 1;
+        for(let i = 0; i <= maxVal; i++) {
+            const lineY = h - paddingBottom - (i * (chartHeight / maxVal));
+            ctx.beginPath(); 
+            ctx.moveTo(paddingLeft, lineY); 
+            ctx.lineTo(w - 20, lineY); 
+            ctx.stroke();
+            
+            ctx.fillStyle = '#94a3b8'; 
+            ctx.font = '11px sans-serif'; 
+            ctx.textAlign = 'right';
+            ctx.fillText(i, paddingLeft - 8, lineY + 4);
+        }
+
+        const colorMap = { Technical: '#6366f1', Soft: '#10b981', Creative: '#f59e0b' };
+
+        dataEntries.forEach(([cat, val], index) => {
+            const colX = paddingLeft + (index * colWidth) + (colWidth / 2);
+            const barH = (val / maxVal) * chartHeight;
+            const barX = colX - (barWidth / 2);
+            const barY = h - paddingBottom - barH;
+
+            if (val > 0) {
+                ctx.fillStyle = colorMap[cat] || '#6366f1';
+                ctx.beginPath();
+                ctx.roundRect(barX, barY, barWidth, barH, [4, 4, 0, 0]);
+                ctx.fill();
+            }
+
+            // Draw Category Labels beneath items
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(cat, colX, h - 15);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAndRenderAnalytics);
+</script>
+{% endblock %}

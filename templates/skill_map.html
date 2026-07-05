@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}BeyondU - Skill Registry Form{% endblock %}
+{% block page_title %}<span id="workspaceTitleText">Operational Competency Registry Engine</span>{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 32px;">
+    <div id="editBannerNotice" style="display: none; background-color: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #fbbf24;">
+        <strong>Editor Mode Active:</strong> Modifying existing parameters for your logged profile vector skill.
+    </div>
+
+    <h3 id="formHeadingText" style="font-size: 18px; font-weight: 600; margin-bottom: 6px;">Register Competency Vector Parameters</h3>
+    <p style="color:var(--text-muted); font-size:13px; margin-bottom: 24px;">Populate tracking updates. Metrics evaluate linearly from 0 up to level 100.</p>
+    
+    <form id="addSkillForm">
+        <div class="input-block">
+            <label class="block-label">Skill Title Nomenclature</label>
+            <input type="text" id="skillName" class="ui-input" placeholder="e.g., Database Architecture" required autocomplete="off">
+        </div>
+        
+        <div class="input-block">
+            <label class="block-label">Domain Cluster Classification</label>
+            <select id="skillCategory" class="ui-input">
+                <option value="Technical">Technical Domain</option>
+                <option value="Soft">Soft Domain</option>
+                <option value="Creative">Creative Domain</option>
+            </select>
+        </div>
+        
+        <div class="input-block">
+            <label class="block-label">Current Capability Level (0 - 100): <span id="currLabel" class="val-badge">25</span></label>
+            <input type="range" id="currentLevel" min="0" max="100" value="25" class="ui-slider" oninput="document.getElementById('currLabel').textContent=this.value">
+        </div>
+        
+        <div class="input-block">
+            <label class="block-label">Target Milestone Level (0 - 100): <span id="targLabel" class="val-badge">75</span></label>
+            <input type="range" id="targetLevel" min="0" max="100" value="75" class="ui-slider" oninput="document.getElementById('targLabel').textContent=this.value">
+        </div>
+        
+        <button type="submit" id="submitActionBtn" class="action-btn">Commit Vector to Framework</button>
+        <button type="button" id="cancelEditBtn" class="cancel-btn" style="display: none; margin-top: 10px;" onclick="abortEditingWorkflow()">Cancel Modification</button>
+    </form>
+    <div id="successToast" style="display:none; color:#10b981; font-size:13px; margin-top:16px; text-align:center; font-weight:600;">✓ Updates successfully compiled. Returning to configuration matrix...</div>
+</div>
+
+<style>
+    .input-block { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .block-label { font-size: 13px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; }
+    .val-badge { color: var(--accent-color); font-weight: 700; }
+    .ui-input { padding: 12px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: white; font-size: 14px; outline: none; }
+    .ui-input:focus { border-color: var(--accent-color); }
+    .ui-input:disabled { background-color: #1f2937; color: #94a3b8; cursor: not-allowed; }
+    
+    .ui-slider { -webkit-appearance: none; appearance: none; height: 6px; background: #1f2937; border-radius: 3px; outline: none; margin: 10px 0; }
+    .ui-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-color); cursor: pointer; }
+    
+    .action-btn { background-color: var(--accent-color); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; font-size: 14px; }
+    .action-btn:hover { background-color: var(--accent-hover); }
+    
+    .cancel-btn { background-color: #374151; color: #f9fafb; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; font-size: 13px; }
+    .cancel-btn:hover { background-color: #4b5563; }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let activeEditModeData = null;
+
+    // Evaluates memory states instantly when page mounts
+    function processIncomingSessionState() {
+        const cachedData = localStorage.getItem('beyondu_edit_buffer');
+        if (cachedData) {
+            activeEditModeData = JSON.parse(cachedData);
+            localStorage.removeItem('beyondu_edit_buffer'); // Wipe temporary buffer
+
+            // Switch the UI elements to Edit State
+            document.getElementById('workspaceTitleText').textContent = "Modify Competency Target Parameters";
+            document.getElementById('formHeadingText').textContent = "Update Existing Skill Vectors";
+            document.getElementById('editBannerNotice').style.display = 'block';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            document.getElementById('submitActionBtn').textContent = "Apply Modification Shifts";
+            
+            // Auto-populate old stored parameters to input elements
+            const nameInput = document.getElementById('skillName');
+            nameInput.value = activeEditModeData.name;
+            nameInput.disabled = true; // Block titles from changes during modifier iterations
+            
+            document.getElementById('skillCategory').value = activeEditModeData.category;
+            document.getElementById('currentLevel').value = activeEditModeData.current_level;
+            document.getElementById('targetLevel').value = activeEditModeData.target_level;
+            
+            document.getElementById('currLabel').textContent = activeEditModeData.current_level;
+            document.getElementById('targLabel').textContent = activeEditModeData.target_level;
+        }
+    }
+
+    function abortEditingWorkflow() {
+        window.location.href = '/';
+    }
+
+    document.getElementById('addSkillForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        let apiEndpoint = '/api/skills/add';
+        let payload = {
+            name: document.getElementById('skillName').value.trim(),
+            category: document.getElementById('skillCategory').value,
+            current_level: document.getElementById('currentLevel').value,
+            target_level: document.getElementById('targetLevel').value
+        };
+
+        // If we are editing, switch payload targeting pointers to the edit API route instead
+        if (activeEditModeData && activeEditModeData.isEditing) {
+            apiEndpoint = `/api/skills/edit/${activeEditModeData.id}`;
+        }
+
+        const res = await fetch(apiEndpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        if(res.ok) {
+            const toast = document.getElementById('successToast');
+            toast.style.display = 'block';
+            setTimeout(() => { 
+                window.location.href = '/'; // Take user right back to their dashboard summary
+            }, 1500);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', processIncomingSessionState);
+let currentEditId = null; // Track if we are editing
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Check if we arrived here from the "Edit" button
+    const editBuffer = localStorage.getItem('beyondu_edit_buffer');
+    if (editBuffer) {
+        const data = JSON.parse(editBuffer);
+        
+        // 2. Pre-fill your form inputs (Make sure these IDs match your actual HTML input IDs)
+        document.getElementById('name').value = data.name;
+        document.getElementById('category').value = data.category;
+        document.getElementById('current_level').value = data.current_level;
+        document.getElementById('target_level').value = data.target_level;
+        
+        // 3. Save the ID for the update request
+        currentEditId = data.id;
+        
+        // 4. Clear the buffer so next time you open the form, it's blank
+        localStorage.removeItem('beyondu_edit_buffer');
+    }
+});
+
+// IMPORTANT: Update your form submission function in skill_map.html to look like this:
+async function submitSkillForm(event) {
+    event.preventDefault();
+    
+    // Gather form data
+    const payload = {
+        name: document.getElementById('name').value,
+        category: document.getElementById('category').value,
+        current_level: document.getElementById('current_level').value,
+        target_level: document.getElementById('target_level').value
+    };
+
+    let url = '/api/skills/add'; // Default to adding a new skill
+    
+    // If we have an ID, we are updating, not adding!
+    if (currentEditId !== null) {
+        payload.skill_id = currentEditId;
+        url = '/api/skills/update';
+    }
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        window.location.href = '/'; // Go back to dashboard on success
+    }
+}
+// Add this to your skill_map.html <script> section
+document.addEventListener('DOMContentLoaded', () => {
+    const editBuffer = localStorage.getItem('beyondu_edit_buffer');
+    if (editBuffer) {
+        const data = JSON.parse(editBuffer);
+        
+        // Populate your form inputs
+        document.getElementById('skillName').value = data.name;
+        document.getElementById('category').value = data.category;
+        document.getElementById('currentLevel').value = data.current_level;
+        document.getElementById('targetLevel').value = data.target_level;
+
+        // Change the form submission URL to the edit endpoint
+        const form = document.getElementById('skillForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            await fetch(`/api/skills/edit/${data.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    current_level: document.getElementById('currentLevel').value,
+                    target_level: document.getElementById('targetLevel').value
+                })
+            });
+            localStorage.removeItem('beyondu_edit_buffer'); // Clear buffer
+            window.location.href = '/';
+        };
+    }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const editBuffer = localStorage.getItem('beyondu_edit_buffer');
+    if (editBuffer) {
+        const data = JSON.parse(editBuffer);
+        // Populate inputs here...
+        
+        document.getElementById('skillForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await fetch('/api/skills/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    skill_id: data.id, // Must include ID for UPDATE
+                    name: document.getElementById('name').value,
+                    current_level: document.getElementById('level').value,
+                    // ... other fields
+                })
+            });
+            localStorage.removeItem('beyondu_edit_buffer');
+            window.location.href = '/';
+        };
+    }
+});
+</script>
+{% endblock %}

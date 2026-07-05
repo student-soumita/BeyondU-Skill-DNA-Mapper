@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}🧭 PathOracle{% endblock %}
+{% block page_title %} 🧭 PathOracle AI Career Mentor{% endblock %}
+
+{% block content %}
+
+<div class="chat-container">
+
+    <div class="chat-header">
+        <h2 style="color: white; margin: 0; font-size: 1.25rem;">Chat Session</h2>
+    </div>
+
+    <div id="chat-box" class="chat-box">
+        <div class="bot-message" id="default-greeting">
+            🖐️ Hello! I'm <strong>PathOracle</strong>.<br><br>
+            Ask me anything about your tech career, coding, BeyondU metrics, or interviews!
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <div class="chat-actions">
+            <button id="saveBtn" class="action-btn">💾 Save Chat</button>
+            <button id="clearBtn" class="action-btn clear-btn">🗑️ Clear Chat</button>
+        </div>
+
+        <div class="chat-input">
+            <input
+                type="text"
+                id="message"
+                placeholder="Ask PathOracle anything..."
+                autocomplete="off"
+            >
+            <button id="sendBtn">
+                Send
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<style>
+
+.chat-container {
+    max-width: 900px;
+    margin: auto;
+    background: #1f2937;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.chat-header {
+    background: #111827;
+    padding: 15px 20px;
+    border-bottom: 1px solid #374151;
+}
+
+.chat-box {
+    height: 480px;
+    overflow-y: auto;
+    background: #1f2937;
+    padding: 20px;
+}
+
+.bottom-controls {
+    background: #111827;
+    padding: 15px 20px;
+    border-top: 1px solid #374151;
+}
+
+.chat-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.action-btn {
+    background: #374151;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.action-btn:hover {
+    background: #4b5563;
+}
+
+.clear-btn {
+    background: #ef4444;
+}
+
+.clear-btn:hover {
+    background: #dc2626;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: #374151;
+    color: white;
+    font-size: 16px;
+}
+
+.chat-input input:focus {
+    outline: none;
+    border-color: #7c3aed;
+}
+
+.chat-input button {
+    background: #7c3aed;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background 0.2s ease;
+}
+
+.chat-input button:hover {
+    background: #6d28d9;
+}
+
+.user-message {
+    background: #2563eb;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border-bottom-right-radius: 4px;
+    margin: 10px 0;
+    width: fit-content;
+    margin-left: auto;
+    max-width: 75%;
+    line-height: 1.5;
+}
+
+.bot-message {
+    background: #374151;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border-bottom-left-radius: 4px;
+    margin: 10px 0;
+    width: fit-content;
+    max-width: 75%;
+    line-height: 1.5;
+}
+
+/* Custom scrollbar for chat box */
+.chat-box::-webkit-scrollbar {
+    width: 8px;
+}
+.chat-box::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+.chat-box::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+.chat-box::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+</style>
+
+<script>
+
+const chatBox = document.getElementById("chat-box");
+const input = document.getElementById("message");
+const sendBtn = document.getElementById("sendBtn");
+const clearBtn = document.getElementById("clearBtn");
+const saveBtn = document.getElementById("saveBtn");
+
+const defaultGreetingHTML = `
+    <div class="bot-message">
+        🖐️ Hello! I'm <strong>PathOracle</strong>.<br><br>
+        Ask me anything about your tech career, coding, BeyondU metrics, or interviews!
+    </div>
+`;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch("/api/pathoracle/history");
+        const history = await response.json();
+        
+        if (history.length > 0) {
+            chatBox.innerHTML = ""; 
+            history.forEach(msg => {
+                if (msg.sender === 'user') {
+                    appendUser(msg.message, false);
+                } else {
+                    appendBot(msg.message, false);
+                }
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } else {
+            chatBox.innerHTML = defaultGreetingHTML;
+        }
+    } catch (e) {
+        console.error("Failed to load history", e);
+        chatBox.innerHTML = defaultGreetingHTML;
+    }
+});
+
+function appendUser(message, autoScroll=true){
+    chatBox.innerHTML += `
+        <div class="user-message">
+            ${message}
+        </div>
+    `;
+    if(autoScroll) chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function appendBot(message, autoScroll=true){
+    const formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    chatBox.innerHTML += `
+        <div class="bot-message">
+            ${formattedMessage}
+        </div>
+    `;
+    if(autoScroll) chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function sendMessage(){
+    const message = input.value.trim();
+    if(message === "") return;
+
+    appendUser(message);
+    input.value = "";
+
+    try {
+        const response = await fetch("/api/pathoracle/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        });
+
+        const data = await response.json();
+        appendBot(data.reply);
+    } catch (e) {
+        appendBot("Sorry, I experienced a network interruption while processing your request.");
+    }
+}
+
+sendBtn.onclick = sendMessage;
+
+input.addEventListener("keypress", function(e){
+    if(e.key === "Enter"){
+        sendMessage();
+    }
+});
+
+clearBtn.addEventListener("click", async () => {
+    try {
+        await fetch("/api/pathoracle/clear", {
+            method: "POST"
+        });
+
+        chatBox.innerHTML = "";
+        appendBot("🗑️ Chat history has been cleared successfully.");
+
+        setTimeout(() => {
+            chatBox.innerHTML = defaultGreetingHTML;
+        }, 1200);
+
+    } catch (error) {
+        appendBot("❌ Unable to clear chat history.");
+    }
+});
+
+</script>
+
+{% endblock %}

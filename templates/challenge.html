@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Skill Challenge{% endblock %}
+{% block page_title %}Mastery Evaluation Engine{% endblock %}
+
+{% block content %}
+
+<div style="max-width:700px;margin:auto;background:var(--bg-secondary);padding:20px;border-radius:10px;">
+  <div style="margin-bottom: 20px;">
+    <button id="backBtn"
+        style="background: transparent;
+               border: 1px solid var(--border-color);
+               color: var(--text-muted);
+               padding: 8px 12px;
+               border-radius: 6px;
+               cursor: pointer;
+               transition: 0.2s;">
+    ← Back to Dashboard
+</button>
+
+<script>
+document.getElementById("backBtn").addEventListener("click", function () {
+    window.location.href = "{{ url_for('dashboard_page') }}";
+});
+</script>
+</div>
+
+    <h2>Challenge: {{ skill.skill_name }}</h2>
+    <p>Current Level: <span style="color: #6366f1; font-weight: bold;">{{ skill.current_level }}/100</span></p>
+
+    <div id="quiz" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;"></div>
+
+    <button onclick="submitChallenge()" style="margin-top:20px;padding:10px 15px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        Submit Verification
+    </button>
+
+    <div id="resultBox" style="margin-top:20px;"></div>
+</div>
+
+<script id="skill-data" type="application/json">
+{
+    "name": "{{ skill.skill_name }}",
+    "level": {{ skill.current_level }},
+    "id": {{ skill.id }}
+}
+</script>
+
+<script>
+const SKILL = JSON.parse(document.getElementById("skill-data").textContent);
+let questions = [];
+
+async function loadChallenge() {
+    const res = await fetch('/api/challenge/generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            skill_name: SKILL.name,
+            current_level: SKILL.level
+        })
+    });
+
+    const data = await res.json();
+    const quiz = document.getElementById('quiz');
+    quiz.innerHTML = '';
+
+    if (!data.question) {
+        quiz.innerHTML = "<p>No question available for this domain.</p>";
+        return;
+    }
+
+    questions = [data];
+
+    questions.forEach((q, i) => {
+        const optionsHtml = q.options.map(opt => `
+            <label style="display:block;margin:10px 0; cursor:pointer; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary);">
+                <input type="radio" name="q${i}" value="${opt}" style="margin-right: 10px;">
+                ${opt}
+            </label>
+        `).join('');
+
+        quiz.innerHTML += `
+            <div style="margin:15px 0;">
+                <b style="font-size: 16px;">System Query: ${q.question}</b>
+                <div style="margin-top: 15px;">${optionsHtml}</div>
+            </div>
+        `;
+    });
+}
+
+async function submitChallenge() {
+    let score = 0;
+
+    questions.forEach((q, i) => {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (selected && selected.value === q.correct) {
+            score++;
+        }
+    });
+
+    const percent = score / questions.length;
+    const box = document.getElementById("resultBox");
+
+    if (percent >= 0.6) {
+        box.innerHTML = `
+            <div style="color:#10b981; background: rgba(16, 185, 129, 0.1); font-weight:bold; padding:15px; border:1px solid #10b981; border-radius:6px;">
+                ✅ MASTERY VERIFIED: Your fundamental logic holds under pressure.<br><br>
+                <span style="font-weight: normal; color: var(--text-main);">Suggestion: You are cleared to proceed to the next developmental phase.</span>
+            </div>
+        `;
+    } else {
+        box.innerHTML = `
+            <div style="color:#ef4444; background: rgba(239, 68, 68, 0.1); font-weight:bold; padding:15px; border:1px solid #ef4444; border-radius:6px;">
+                ❌ CALCULATION FAILED: Critical knowledge gap detected.<br><br>
+                <span style="font-weight: normal; color: var(--text-main);">Suggestion: Return to foundational documentation and rebuild this core competency.</span>
+            </div>
+        `;
+    }
+
+    await fetch('/api/challenge/evaluate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            score: score,
+            total: questions.length,
+            skill: SKILL.name,
+            level: SKILL.level
+        })
+    });
+}
+
+// Initialize on load
+loadChallenge();
+</script>
+{% endblock %}

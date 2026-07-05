@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}📂 Project Reviewer{% endblock %}
+{% block page_title %} Project Reviewer{% endblock %}
+
+{% block content %}
+
+<div class="project-review-container">
+
+    <div class="review-header">
+        <h1>📂  Project Reviewer</h1>
+
+        <p>
+            Analyze your project, evaluate its resume value,
+            interview potential and receive personalized
+            improvement recommendations.
+        </p>
+    </div>
+
+    <div class="review-card">
+
+        <div class="form-group">
+            <label>Project Name</label>
+
+            <input
+                type="text"
+                id="projectName"
+                placeholder="BeyondU Career Platform">
+        </div>
+
+        <div class="form-group">
+            <label>Project Description</label>
+
+            <textarea
+                id="projectDescription"
+                rows="6"
+                placeholder="Describe your project..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Technologies Used</label>
+
+            <input
+                type="text"
+                id="technologies"
+                placeholder="Python, Flask, SQLite, HTML, CSS, JavaScript">
+        </div>
+
+        <div class="form-group">
+            <label>GitHub Link (Optional)</label>
+
+            <input
+                type="url"
+                id="github"
+                placeholder="https://github.com/username/project">
+        </div>
+
+        <button id="reviewBtn">
+            🔍 Analyze Project
+        </button>
+
+    </div>
+
+    <div
+        id="reviewResult"
+        class="review-result"
+        style="display:none;">
+    </div>
+
+</div>
+
+<style>
+
+.project-review-container{
+
+    max-width:1000px;
+
+    margin:auto;
+}
+
+.review-header{
+
+    margin-bottom:30px;
+}
+
+.review-header h1{
+
+    color:#8b5cf6;
+
+    margin-bottom:10px;
+}
+
+.review-card{
+
+    background:#111827;
+
+    padding:30px;
+
+    border-radius:15px;
+
+    border:1px solid #374151;
+}
+
+.form-group{
+
+    margin-bottom:20px;
+}
+
+.form-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+}
+
+.form-group input,
+
+.form-group textarea{
+
+    width:100%;
+
+    background:#1f2937;
+
+    color:white;
+
+    border:1px solid #374151;
+
+    border-radius:8px;
+
+    padding:12px;
+
+    font-size:15px;
+}
+
+textarea{
+
+    resize:vertical;
+}
+
+#reviewBtn{
+
+    background:#8b5cf6;
+
+    color:white;
+
+    border:none;
+
+    padding:14px 28px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:bold;
+}
+
+#reviewBtn:hover{
+
+    background:#7c3aed;
+}
+
+.review-result{
+
+    margin-top:30px;
+
+    background:#111827;
+
+    padding:25px;
+
+    border-radius:15px;
+
+    border:1px solid #374151;
+}
+
+.score{
+
+    font-size:42px;
+
+    color:#8b5cf6;
+
+    font-weight:bold;
+
+    margin-bottom:20px;
+}
+
+.section{
+
+    margin-top:20px;
+}
+
+.section h3{
+
+    color:#8b5cf6;
+
+    margin-bottom:10px;
+}
+
+</style>
+
+<script>
+ console.log("Script is running!");
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const reviewButton = document.getElementById("reviewBtn");
+
+    if (!reviewButton) {
+        console.error("Could not find button with ID 'reviewBtn'. Check HTML.");
+        return;
+    }
+
+    reviewButton.addEventListener("click", async function () {
+
+        console.log("Analyzing project...");
+
+        const name = document.getElementById("projectName").value.trim();
+        const description = document.getElementById("projectDescription").value.trim();
+        const technologies = document.getElementById("technologies").value.trim();
+        const github = document.getElementById("github").value.trim();
+
+        if (!name || !description || !technologies) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/project-review", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include", // IMPORTANT for session-based login
+                body: JSON.stringify({
+                    project_name: name,
+                    description: description,
+                    technologies: technologies,
+                    github: github
+                })
+            });
+
+            const contentType = response.headers.get("content-type");
+
+            // 🚨 If Flask returns HTML (login page / error page)
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error("Non-JSON response received:", text);
+
+                alert("Session expired or server error. Redirecting to login...");
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Server returned " + response.status);
+            }
+
+            const result = document.getElementById("reviewResult");
+
+            result.style.display = "block";
+            result.innerHTML = `
+                <div class="score">${data.overall_score}/100</div>
+                <div class="section"><h3>📄 Resume Score</h3><p>${data.resume_score}/100</p></div>
+                <div class="section"><h3>🎤 Interview Score</h3><p>${data.interview_score}/100</p></div>
+                <div class="section"><h3>⭐ Strengths</h3><p>${data.strengths}</p></div>
+                <div class="section"><h3>⚠ Weaknesses</h3><p>${data.weaknesses}</p></div>
+                <div class="section"><h3>💡 Recommendations</h3><p>${data.recommendations}</p></div>
+            `;
+
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            alert("Error: " + error.message);
+        }
+    });
+});
+</script>
+
+{% endblock %}

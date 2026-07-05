@@ -1,0 +1,62 @@
+text,intent
+hi,greeting
+hello,greeting
+hey,greeting
+good morning,greeting
+good evening,greeting
+how are you,greeting
+what is python,programming
+explain python list,programming
+difference between list and tuple,programming
+what is flask,programming
+what is html,programming
+what is css,programming
+what is javascript,programming
+what is api,programming
+what is recursion,programming
+what is sql,programming
+what is mongodb,programming
+what is oop,programming
+what is inheritance,programming
+difference between java and python,programming
+resume tips,career
+career guidance,career
+how to get internship,career
+placement preparation,career
+interview questions,career
+how to improve resume,career
+salary of software engineer,career
+dream company roadmap,career
+linkedin profile tips,career
+github portfolio,career
+what is gravity,science
+what is atom,science
+what is dna,science
+what is photosynthesis,science
+what is machine learning,science
+what is deep learning,science
+what is cloud computing,science
+what is cyber security,science
+what is blockchain,science
+area of circle,math
+perimeter of circle,math
+quadratic formula,math
+prime number,math
+pythagoras theorem,math
+factorial,math
+probability,math
+mean median mode,math
+python tutorial,programming
+teach me python,programming
+python basics,programming
+how to learn python,programming
+python for beginners,programming
+resume review,career
+check my resume,career
+resume format,career
+best resume template,career
+resume examples,career
+tell me a joke,unknown
+what is your favourite movie,unknown
+sing a song,unknown
+who won yesterday's match,unknown

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>BeyondU</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+
+overflow:hidden;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+height:100vh;
+
+font-family:'Cinzel',serif;
+
+background:
+radial-gradient(circle at 20% 20%,rgba(124,58,237,.35),transparent 30%),
+radial-gradient(circle at 80% 25%,rgba(99,102,241,.28),transparent 35%),
+radial-gradient(circle at 50% 90%,rgba(168,85,247,.20),transparent 35%),
+linear-gradient(135deg,#04050d,#090b18,#141132);
+
+position:relative;
+}
+
+/* Moving Background Glow */
+
+body::before{
+
+content:"";
+
+position:absolute;
+
+inset:-30%;
+
+background:
+
+radial-gradient(circle,
+rgba(124,58,237,.18),
+transparent 60%);
+
+animation:rotateGlow 10s linear infinite;
+
+filter:blur(40px);
+}
+
+@keyframes rotateGlow{
+
+0%{
+
+transform:rotate(0deg) scale(1);
+}
+
+100%{
+
+transform:rotate(360deg) scale(1.25);
+}
+
+}
+
+/* Stars */
+
+body::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background-image:
+
+radial-gradient(circle,#ffffff99 1.5px,transparent 1.5px),
+radial-gradient(circle,#8b5cf666 2px,transparent 2px),
+radial-gradient(circle,#c084fc66 1px,transparent 1px);
+
+background-size:
+
+180px 180px,
+240px 240px,
+130px 130px;
+
+animation:starsMove 25s linear infinite;
+}
+
+@keyframes starsMove{
+
+from{
+
+transform:translateY(0);
+}
+
+to{
+
+transform:translateY(-120px);
+}
+
+}
+
+/* Logo Container */
+
+.logo-container{
+
+position:relative;
+
+z-index:10;
+
+text-align:center;
+}
+
+/* Logo */
+.logo{
+font-family:'Cormorant Garamond',serif;
+font-size:125px;
+font-weight:700;
+letter-spacing:8px;
+}
+.logo{
+
+font-family:'Cinzel',serif;
+
+font-size:115px;
+
+font-weight:800;
+
+letter-spacing:14px;
+
+text-transform:none;
+
+background:linear-gradient(
+180deg,
+#ffffff 0%,
+#f8fafc 12%,
+#ede9fe 28%,
+#ddd6fe 45%,
+#c4b5fd 60%,
+#a78bfa 78%,
+#7c3aed 100%
+);
+
+-webkit-background-clip:text;
+background-clip:text;
+-webkit-text-fill-color:transparent;
+
+opacity:0;
+
+transform:scale(.35);
+
+animation:
+logoReveal 2s forwards,
+logoGlow 2.8s ease-in-out infinite alternate;
+
+filter:
+drop-shadow(0 0 8px rgba(255,255,255,.45))
+drop-shadow(0 0 25px rgba(167,139,250,.55))
+drop-shadow(0 0 55px rgba(124,58,237,.7));
+
+}
+@keyframes logoReveal{
+
+0%{
+
+opacity:0;
+
+transform:scale(.2);
+}
+
+45%{
+
+opacity:1;
+
+transform:scale(1.18);
+}
+
+70%{
+
+transform:scale(.96);
+}
+
+100%{
+
+opacity:1;
+
+transform:scale(1);
+}
+
+}
+
+@keyframes logoGlow{
+
+0%{
+
+filter:
+drop-shadow(0 0 10px rgba(255,255,255,.35))
+drop-shadow(0 0 25px rgba(139,92,246,.45))
+drop-shadow(0 0 60px rgba(124,58,237,.55));
+
+}
+
+100%{
+
+filter:
+drop-shadow(0 0 20px rgba(255,255,255,.7))
+drop-shadow(0 0 45px rgba(196,181,253,.9))
+drop-shadow(0 0 95px rgba(139,92,246,.95));
+
+}
+
+}
+
+/* Animated Underline */
+
+.logo::after{
+
+content:"";
+
+display:block;
+
+margin:20px auto 0;
+
+width:0;
+
+height:4px;
+
+border-radius:50px;
+
+background:linear-gradient(
+90deg,
+transparent,
+#c084fc,
+#ffffff,
+#c084fc,
+transparent
+);
+
+box-shadow:
+0 0 15px #c084fc,
+0 0 30px #8b5cf6;
+
+animation:lineGrow 1.5s forwards;
+
+animation-delay:1.6s;
+
+}
+@keyframes lineGrow{
+
+to{
+
+width:420px;
+}
+
+}
+
+/* Tagline */
+
+.tagline{
+
+margin-top:35px;
+
+font-family:'Segoe UI',sans-serif;
+
+font-size:28px;
+
+font-weight:600;
+
+letter-spacing:1px;
+
+background:linear-gradient(
+90deg,
+#ffffff,
+#ddd6fe,
+#c4b5fd
+);
+
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+
+opacity:0;
+
+animation:fadeUp 1.5s forwards;
+
+animation-delay:2.1s;
+
+}
+/* Subtitle */
+
+.subtitle{
+
+margin-top:18px;
+
+font-family:'Segoe UI',sans-serif;
+
+font-size:15px;
+
+letter-spacing:10px;
+
+color:#bdbdbd;
+
+text-transform:uppercase;
+
+opacity:0;
+
+animation:fadeUp 1.5s forwards;
+
+animation-delay:2.8s;
+
+}
+
+@keyframes fadeUp{
+
+from{
+
+opacity:0;
+
+transform:translateY(25px);
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+}
+
+}
+
+/* Flash Effect */
+
+.flash{
+
+position:absolute;
+
+width:100%;
+
+height:100%;
+
+background:white;
+
+opacity:0;
+
+animation:flash 2.2s;
+
+pointer-events:none;
+}
+
+@keyframes flash{
+
+0%{
+
+opacity:0;
+}
+
+40%{
+
+opacity:.12;
+}
+
+60%{
+
+opacity:0;
+}
+
+100%{
+
+opacity:0;
+}
+
+}
+
+/* Fade Out */
+
+.fade-out{
+
+animation:fadeOut 1s forwards;
+}
+
+@keyframes fadeOut{
+
+to{
+
+opacity:0;
+
+transform:scale(1.08);
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="flash"></div>
+
+<div class="logo-container">
+
+<div class="logo">
+Beyond<span style="
+color:#ffffff;
+text-shadow:
+0 0 15px #ffffff,
+0 0 30px #ddd6fe,
+0 0 60px #c4b5fd;
+">U</span>
+</div>
+
+<div class="tagline">
+Unlock Your Skills. Shape Your Future.
+</div>
+
+<div class="subtitle">
+DISCOVER • DEVELOP • EVOLVE
+</div>
+
+</div>
+
+<script>
+
+setTimeout(function(){
+
+document.body.classList.add("fade-out");
+
+},4200);
+
+setTimeout(function(){
+
+window.location.href="/login";
+
+},5000);
+
+</script>
+
+</body>
+
+</html>
